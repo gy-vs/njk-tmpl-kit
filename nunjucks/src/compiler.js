@@ -1085,7 +1085,7 @@ class Compiler extends Obj {
     this._withScopedSyntax(() => {
       this.compile(node.body, frame);
     });
-    this._emitLine('return output;');
+    this._emitLine('return env.opts.autoescape ? runtime.markSafe(output) : output;');
     this._emitLine('})()');
     // and of course, revert back to the old buffer id
     this.buffer = buffer;

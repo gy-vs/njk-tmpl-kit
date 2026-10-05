@@ -1662,6 +1662,144 @@
       finish(done);
     });
 
+    it('should treat block-set output as safe when autoescaping', function(done) {
+      var ctx = {
+        name: 'Tom & <Jerry>'
+      };
+      var escapedName = 'Tom &amp; &lt;Jerry&gt;';
+
+      equal(
+        '{% set card %}<p>{{ name }}</p>{% endset %}{{ card }}',
+        ctx,
+        { autoescape: true },
+        `<p>${escapedName}</p>`
+      );
+
+      equal(
+        '{% macro box(body) %}<div>{{ body }}</div>{% endmacro %}' +
+        '{% set card %}<p>{{ name }}</p>{% endset %}' +
+        '{{ box(card) }}',
+        ctx,
+        { autoescape: true },
+        `<div><p>${escapedName}</p></div>`
+      );
+
+      equal(
+        '{% set card %}<b>{{ name }}</b>{% endset %}' +
+        '{{ card|striptags }}',
+        ctx,
+        { autoescape: true },
+        escapedName
+      );
+
+      equal(
+        '{% set card %}<p>{{ name }}</p>{% endset %}' +
+        '{{ card|length }}',
+        ctx,
+        { autoescape: true },
+        '30'
+      );
+
+      equal(
+        '{{ name|upper }}',
+        ctx,
+        { autoescape: true },
+        'TOM &amp; &lt;JERRY&gt;'
+      );
+
+      equal(
+        '{% set card %}<p>{{ name }}</p>{% endset %}{{ card }}',
+        ctx,
+        { autoescape: false },
+        '<p>Tom & <Jerry></p>'
+      );
+
+      finish(done);
+    });
+
+    it('should treat filter block output as safe when autoescaping', function(done) {
+      var ctx = {
+        name: 'Tom & <Jerry>'
+      };
+
+      equal(
+        '{% filter upper %}<p>{{ name }}</p>{% endfilter %}',
+        ctx,
+        { autoescape: true },
+        '<P>TOM &AMP; &LT;JERRY&GT;</P>'
+      );
+
+      equal(
+        '{% filter escape %}<p>{{ name }}</p>{% endfilter %}',
+        ctx,
+        { autoescape: true },
+        '<p>Tom &amp; &lt;Jerry&gt;</p>'
+      );
+
+      equal(
+        '{% filter trim %}  <p>{{ name }}</p>  {% endfilter %}',
+        ctx,
+        { autoescape: true },
+        '<p>Tom &amp; &lt;Jerry&gt;</p>'
+      );
+
+      equal(
+        '{% filter replace("Tom", "Bob") %}<p>{{ name }}</p>{% endfilter %}',
+        ctx,
+        { autoescape: true },
+        '<p>Bob &amp; &lt;Jerry&gt;</p>'
+      );
+
+      equal(
+        '{% filter upper %}<p>{{ name }}</p>{% endfilter %}',
+        ctx,
+        { autoescape: false },
+        '<P>TOM & <JERRY></P>'
+      );
+
+      finish(done);
+    });
+
+    it('should preserve safeness for call and macro output filters', function(done) {
+      var ctx = {
+        name: 'Tom & <Jerry>'
+      };
+
+      equal(
+        '{% macro wrap() %}{{ caller()|upper }}{% endmacro %}' +
+        '{% call wrap() %}<i>{{ name }}</i>{% endcall %}',
+        ctx,
+        { autoescape: true },
+        '<I>TOM &AMP; &LT;JERRY&GT;</I>'
+      );
+
+      equal(
+        '{% macro tag() %}<em>{{ name }}</em>{% endmacro %}' +
+        '{{ tag()|lower }}',
+        ctx,
+        { autoescape: true },
+        '<em>tom &amp; &lt;jerry&gt;</em>'
+      );
+
+      equal(
+        '{% macro tag() %}<em>{{ name }}</em>{% endmacro %}' +
+        '{{ tag()|replace("Tom", "Bob") }}',
+        ctx,
+        { autoescape: true },
+        '<em>Bob &amp; &lt;Jerry&gt;</em>'
+      );
+
+      equal(
+        '{% macro tag() %}<em>{{ name }}</em>{% endmacro %}' +
+        '{{ tag()|trim }}',
+        ctx,
+        { autoescape: true },
+        '<em>Tom &amp; &lt;Jerry&gt;</em>'
+      );
+
+      finish(done);
+    });
+
     it('should compile block-set wrapping an inherited block', function(done) {
       equal(
         '{% extends "base-set-wraps-block.njk" %}' +
