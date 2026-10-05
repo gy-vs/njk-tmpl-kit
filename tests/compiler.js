@@ -1986,6 +1986,90 @@
       finish(done);
     });
 
+    it('should not double-escape block-set content', function(done) {
+      equal(
+        '{% set card %}<p>{{ name }}</p>{% endset %}{{ card }}',
+        { name: 'Tom & <Jerry>' },
+        { autoescape: true },
+        '<p>Tom &amp; &lt;Jerry&gt;</p>');
+
+      equal(
+        '{% macro box(body) %}<div>{{ body }}</div>{% endmacro %}' +
+        '{% set card %}<p>{{ name }}</p>{% endset %}{{ box(card) }}',
+        { name: 'Tom & <Jerry>' },
+        { autoescape: true },
+        '<div><p>Tom &amp; &lt;Jerry&gt;</p></div>');
+
+      equal(
+        '{% set x %}<b>{{ name }}</b>{% endset %}{{ x | striptags }}',
+        { name: 'Tom & <Jerry>' },
+        { autoescape: true },
+        'Tom &amp; &lt;Jerry&gt;');
+
+      finish(done);
+    });
+
+    it('should not double-escape filter block content', function(done) {
+      equal(
+        '{% filter upper %}<p>{{ name }}</p>{% endfilter %}',
+        { name: 'Tom & <Jerry>' },
+        { autoescape: true },
+        '<P>TOM &AMP; &LT;JERRY&GT;</P>');
+
+      equal(
+        '{% filter escape %}<p>{{ name }}</p>{% endfilter %}',
+        { name: 'Tom & <Jerry>' },
+        { autoescape: true },
+        '<p>Tom &amp; &lt;Jerry&gt;</p>');
+
+      equal(
+        '{% filter trim %}  <p>{{ name }}</p>  {% endfilter %}',
+        { name: 'Tom & <Jerry>' },
+        { autoescape: true },
+        '<p>Tom &amp; &lt;Jerry&gt;</p>');
+
+      equal(
+        '{% filter replace("Tom", "Bob") %}<p>{{ name }}</p>{% endfilter %}',
+        { name: 'Tom & <Jerry>' },
+        { autoescape: true },
+        '<p>Bob &amp; &lt;Jerry&gt;</p>');
+
+      finish(done);
+    });
+
+    it('should not double-escape macro and caller output through upper/lower', function(done) {
+      equal(
+        '{% macro tag() %}<em>{{ name }}</em>{% endmacro %}{{ tag() | lower }}',
+        { name: 'Tom & <Jerry>' },
+        { autoescape: true },
+        '<em>tom &amp; &lt;jerry&gt;</em>');
+
+      equal(
+        '{% macro wrap() %}{{ caller() | upper }}{% endmacro %}' +
+        '{% call wrap() %}<i>{{ name }}</i>{% endcall %}',
+        { name: 'Tom & <Jerry>' },
+        { autoescape: true },
+        '<I>TOM &AMP; &LT;JERRY&GT;</I>');
+
+      finish(done);
+    });
+
+    it('should not mark block-set content safe when autoescape is off', function(done) {
+      equal(
+        '{% set card %}<p>{{ name }}</p>{% endset %}{{ card }}',
+        { name: 'Tom & <Jerry>' },
+        { autoescape: false },
+        '<p>Tom & <Jerry></p>');
+
+      equal(
+        '{% filter upper %}<p>{{ name }}</p>{% endfilter %}',
+        { name: 'Tom & <Jerry>' },
+        { autoescape: false },
+        '<P>TOM & <JERRY></P>');
+
+      finish(done);
+    });
+
     it('should not autoescape when extension set false', function(done) {
       function TestExtension() {
         // jshint validthis: true

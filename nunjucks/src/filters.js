@@ -246,7 +246,7 @@ exports.list = list;
 
 function lower(str) {
   str = normalize(str, '');
-  return str.toLowerCase();
+  return r.copySafeness(str, str.toLowerCase());
 }
 
 exports.lower = lower;
@@ -547,7 +547,7 @@ exports.truncate = truncate;
 
 function upper(str) {
   str = normalize(str, '');
-  return str.toUpperCase();
+  return r.copySafeness(str, str.toUpperCase());
 }
 
 exports.upper = upper;

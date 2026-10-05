@@ -589,6 +589,16 @@
       finish(done);
     });
 
+    it('lower should preserve safeness', function(done) {
+      equal('{{ str | lower }}', {
+        str: r.markSafe('<EM>Tom &amp; &lt;Jerry&gt;</EM>')
+      }, '<em>tom &amp; &lt;jerry&gt;</em>');
+      equal('{{ str | lower }}', {
+        str: '<EM>x</EM>'
+      }, '&lt;em&gt;x&lt;/em&gt;');
+      finish(done);
+    });
+
     it('nl2br', function(done) {
       equal('{{ null | nl2br }}', '');
       equal('{{ undefined | nl2br }}', '');
@@ -946,6 +956,16 @@
       equal('{{ null | upper }}', '');
       equal('{{ undefined | upper }}', '');
       equal('{{ nothing | upper }}', '');
+      finish(done);
+    });
+
+    it('upper should preserve safeness', function(done) {
+      equal('{{ str | upper }}', {
+        str: r.markSafe('<em>Tom &amp; &lt;Jerry&gt;</em>')
+      }, '<EM>TOM &AMP; &LT;JERRY&GT;</EM>');
+      equal('{{ str | upper }}', {
+        str: '<em>x</em>'
+      }, '&lt;EM&gt;X&lt;/EM&gt;');
       finish(done);
     });
 

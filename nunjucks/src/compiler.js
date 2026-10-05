@@ -1085,6 +1085,11 @@ class Compiler extends Obj {
     this._withScopedSyntax(() => {
       this.compile(node.body, frame);
     });
+    // the captured output was already escaped while rendering, so
+    // mark it safe to avoid double-escaping when it is output again
+    this._emitLine('if (env.opts.autoescape) {');
+    this._emitLine('return new runtime.SafeString(output);');
+    this._emitLine('}');
     this._emitLine('return output;');
     this._emitLine('})()');
     // and of course, revert back to the old buffer id
